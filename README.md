@@ -11,6 +11,10 @@
   Linux in Rust, with no account and no API keys required.
 </p>
 
+<p align="center">
+  <img src="docs/img/demo.gif" alt="Bloomberg Terminal demo: dashboard, charting and market intelligence panels">
+</p>
+
 <p align="center"><sub>Offline demo data (<code>HD_PROVIDER=sample</code>). Everything you see can also run live against public exchange APIs.</sub></p>
 
 ---
@@ -43,27 +47,6 @@ arranged, split, docked and linked together so related views stay in sync.
 | | `OMON` · `WEI` · `GC` · `CN` | Option chains with greeks, world markets, the Treasury curve, headlines |
 | | `CONG` · `POL PELOSI` | US Congress trades from the official STOCK Act filings, with chart markers and alerts |
 | **Trading** | `PORT` · `BUY AAPL 10` | A paper-trading demo account by default; real brokerage accounts through SnapTrade (read-only until you turn trading on) |
-
-Bloomberg Terminal opens on the **Crypto Desk**; the **Hyperliquid Desk**, **Market Desk** and a classic equities **Default** desk are available from the workspace switcher.
-
-<table>
-  <tr>
-    <td><img src="docs/img/crypto-desk.png" alt="Crypto Desk"></td>
-    <td><img src="docs/img/hyperliquid-desk.png" alt="Hyperliquid Desk"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Crypto Desk</b>: chart, heatmap, derivatives board, footprint, liquidations, news terminal</td>
-    <td align="center"><b>Hyperliquid Desk</b>: leaderboard, wallet, whale prints, positioning, options flow</td>
-  </tr>
-  <tr>
-    <td><img src="docs/img/market-desk.png" alt="Market Desk"></td>
-    <td><img src="docs/img/chart.png" alt="BTCUSD chart with drawing tools"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Market Desk</b>: returns heatmap, prediction markets, KOL calls, ecosystem, seasonality, alerts</td>
-    <td align="center"><b>Charts</b>: drawing toolbar, OHLC legend, trendline and Fib on BTCUSD 1H</td>
-  </tr>
-</table>
 
 ## Install
 
