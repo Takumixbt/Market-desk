@@ -11,10 +11,6 @@
   Linux in Rust, with no account and no API keys required.
 </p>
 
-<p align="center">
-  <img src="docs/img/demo.gif" alt="Bloomberg Terminal demo: the Crypto Desk with a live order book heatmap, footprint, liquidations and the news terminal, then the chart's drawing tools, the Market Desk and the Hyperliquid Desk">
-</p>
-
 <p align="center"><sub>Offline demo data (<code>HD_PROVIDER=sample</code>). Everything you see can also run live against public exchange APIs.</sub></p>
 
 ---
