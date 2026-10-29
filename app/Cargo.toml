@@ -1,6 +1,6 @@
 [package]
 name = "hyperdesk"
-description = "Hyperdesk: a keyboard-driven crypto and markets terminal with GPU charts, derivatives, order flow and Hyperliquid intelligence"
+description = "A crypto and markets terminal with GPU charts, derivatives, order flow and Hyperliquid intelligence"
 version.workspace = true
 edition.workspace = true
 default-run = "hyperdesk"

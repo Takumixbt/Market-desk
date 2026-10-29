@@ -1,5 +1,5 @@
-//! Hyperdesk: a keyboard-driven market terminal with GPU charts, crypto derivatives and order
-//! flow, Hyperliquid trader intelligence, prediction markets and congressional trade tracking.
+//! A market terminal with GPU charts, crypto derivatives and order flow, Hyperliquid trader
+//! intelligence, prediction markets and congressional trade tracking.
 
 // Release builds on Windows are GUI apps (no console window); logs go to a file instead.
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
