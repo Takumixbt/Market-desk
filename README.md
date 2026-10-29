@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="app/assets/icon.png" width="96" alt="Bloomberg Terminal icon">
+  <img src="app/assets/icon.png" width="96" alt="Market-desk icon">
 </p>
 
-<h1 align="center">Bloomberg Terminal</h1>
+<h1 align="center">Market-desk</h1>
 
 <p align="center">
   <b>A market intelligence terminal for crypto and global markets.</b><br>
@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/img/demo.gif" alt="Bloomberg Terminal demo: dashboard, charting and market intelligence panels">
+  <img src="docs/img/demo.gif" alt="Market-desk demo: dashboard, charting and market intelligence panels">
 </p>
 
 <p align="center"><sub>Offline demo data (<code>HD_PROVIDER=sample</code>). Everything you see can also run live against public exchange APIs.</sub></p>
@@ -77,10 +77,10 @@ Nothing below is required; every pane works without it.
 | **Stocks from Alpaca** | `APCA_API_KEY_ID` and `APCA_API_SECRET_KEY` (free tier). |
 | **Brokerage accounts** | **Settings › Brokerage**: SnapTrade client ID and consumer key, **Register User**, **Connect Brokerage…**. Secrets go to the Windows Credential Manager or macOS Keychain; the app stores them in the OS keychain. |
 
-**Where things live:** `%APPDATA%\BloombergTerminal` on Windows, `~/Library/Application Support/BloombergTerminal`
-on macOS, `$XDG_DATA_HOME/bloomberg-terminal` on Linux (or `HD_DATA_DIR`). Layouts, themes, prefs, caches,
+**Where things live:** `%APPDATA%\Hyperdesk` on Windows, `~/Library/Application Support/Hyperdesk`
+on macOS, `$XDG_DATA_HOME/hyperdesk` on Linux (or `HD_DATA_DIR`). Layouts, themes, prefs, caches,
 labels, alerts and KOL calls are plain JSON/TOML/SQLite files there. Release builds on Windows
-log to `bloomberg-terminal.log` in the same folder.
+log to `hyperdesk.log` in the same folder.
 
 ## Where the data comes from
 
@@ -93,7 +93,7 @@ by endpoint, with refresh rates and caveats (geo-blocks, rate limits, unofficial
 
 ## Themes
 
-Nine built in, led by the default **Bloomberg Terminal** palette: Terminal Dark and Light,
+Nine built in, led by the default **Hyperdesk** palette: Terminal Dark and Light,
 Amber Terminal (amber monospace on black), High Contrast, Solarized Dark and Light,
 Nord and Monokai. **Settings › Themes** is a live editor; custom themes are TOML files you can
 share.
