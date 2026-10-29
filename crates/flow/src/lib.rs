@@ -86,7 +86,7 @@ impl Http {
     pub fn new() -> Result<Self> {
         ensure_tls();
         let client = reqwest::Client::builder()
-            .user_agent(concat!("hyperdesk/", env!("CARGO_PKG_VERSION")))
+            .user_agent(concat!("market-desk/", env!("CARGO_PKG_VERSION")))
             .timeout(Duration::from_secs(15))
             .build()?;
         Ok(Self { client })

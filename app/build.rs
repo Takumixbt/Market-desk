@@ -8,9 +8,9 @@ fn main() {
     }
     let mut res = winresource::WindowsResource::new();
     res.set_icon("assets/icon.ico")
-        .set("ProductName", "Hyperdesk")
-        .set("FileDescription", "Hyperdesk market terminal")
-        .set("InternalName", "hyperdesk");
+        .set("ProductName", "Market-desk")
+        .set("FileDescription", "Market-desk: crypto and markets terminal")
+        .set("InternalName", "market-desk");
     if let Err(e) = res.compile() {
         // A missing resource compiler only loses the icon; the app still builds.
         println!("cargo:warning=could not embed the Windows icon: {e}");

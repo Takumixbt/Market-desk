@@ -48,8 +48,8 @@ fn main() -> eframe::Result {
         .filter(|n| matches!(n, 1 | 2 | 4 | 8))
         .unwrap_or(if cfg!(any(target_os = "macos", windows)) { 4 } else { 1 });
     let mut viewport = egui::ViewportBuilder::default()
-        .with_title("Hyperdesk")
-        .with_app_id("hyperdesk")
+        .with_title("Market-desk")
+        .with_app_id("market-desk")
         .with_icon(eframe::icon_data::from_png_bytes(include_bytes!("../assets/icon.png")).expect("app icon"))
         .with_inner_size([1600.0, 960.0])
         .with_min_inner_size([900.0, 560.0]);
@@ -69,10 +69,10 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
     eframe::run_native(
-        "hyperdesk",
+        "market-desk",
         options,
         Box::new(move |cc| {
-            let rs = cc.wgpu_render_state.as_ref().ok_or("Hyperdesk requires the wgpu renderer")?;
+            let rs = cc.wgpu_render_state.as_ref().ok_or("Market-desk requires the wgpu renderer")?;
             rs.renderer.write().callback_resources.insert(hd_chart::gpu::ChartRenderer::new(
                 &rs.device,
                 rs.target_format,

@@ -1,12 +1,12 @@
-; Inno Setup script for Hyperdesk (built by scripts\package-windows.ps1, which passes
+; Inno Setup script for Market-desk (built by scripts\package-windows.ps1, which passes
 ; AppVersion, SourceDir and OutputDir). Installs per user, so no administrator rights are
-; needed; settings, layouts and caches live in %APPDATA%\Hyperdesk and are kept on uninstall.
+; needed; settings, layouts and caches live in %APPDATA%\Market-desk and are kept on uninstall.
 
 #ifndef AppVersion
   #define AppVersion "0.0.0"
 #endif
 #ifndef SourceDir
-  #define SourceDir "..\..\dist\hyperdesk"
+  #define SourceDir "..\..\dist\market-desk"
 #endif
 #ifndef OutputDir
   #define OutputDir "..\..\dist"
@@ -14,19 +14,19 @@
 
 [Setup]
 AppId={{6F1C3A52-8E0B-4C51-9B7A-2D5E7C1F4A90}
-AppName=Hyperdesk
+AppName=Market-desk
 AppVersion={#AppVersion}
-AppPublisher=Hyperdesk
-DefaultDirName={localappdata}\Programs\hyperdesk
-DefaultGroupName=Hyperdesk
+AppPublisher=Market-desk
+DefaultDirName={localappdata}\Programs\market-desk
+DefaultGroupName=Market-desk
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir={#OutputDir}
-OutputBaseFilename=hyperdesk-{#AppVersion}-setup-x64
+OutputBaseFilename=market-desk-{#AppVersion}-setup-x64
 SetupIconFile=..\..\app\assets\icon.ico
-UninstallDisplayIcon={app}\hyperdesk.exe
+UninstallDisplayIcon={app}\market-desk.exe
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -38,8 +38,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 
 [Icons]
-Name: "{group}\Hyperdesk"; Filename: "{app}\hyperdesk.exe"
-Name: "{userdesktop}\Hyperdesk"; Filename: "{app}\hyperdesk.exe"; Tasks: desktopicon
+Name: "{group}\Market-desk"; Filename: "{app}\market-desk.exe"
+Name: "{userdesktop}\Market-desk"; Filename: "{app}\market-desk.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\hyperdesk.exe"; Description: "{cm:LaunchProgram,Hyperdesk}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\market-desk.exe"; Description: "{cm:LaunchProgram,Market-desk}"; Flags: nowait postinstall skipifsilent

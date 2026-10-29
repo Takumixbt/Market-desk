@@ -1,6 +1,6 @@
 [package]
 name = "hd-macos"
-description = "macOS window chrome for Hyperdesk: unified toolbar, vibrancy, accent colour"
+description = "macOS window chrome for Market-desk: unified toolbar, vibrancy, accent colour"
 version.workspace = true
 edition.workspace = true
 

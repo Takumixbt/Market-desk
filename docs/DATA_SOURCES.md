@@ -1,7 +1,7 @@
 # Where the data comes from
 
 Every number in the terminal comes from a **free, public source** called directly from your
-machine. There is no hyperdesk server in between, no account, and no API key is required
+machine. There is no market-desk server in between, no account, and no API key is required
 (Alpaca and SnapTrade are optional and use your own keys). Nothing is resold or redistributed:
 each install fetches its own data, and you are bound by each source's terms of use.
 
@@ -141,7 +141,7 @@ chains (`OMON`) show volume and open interest per contract instead.
 Headlines are merged and de-duplicated. Coins come from the source's own coin detection, from
 `$CASHTAGS`, tickers known to the derivatives board and common coin names; story tags (BREAKING,
 LIST, HACK, REG, ETF, MACRO, HL, RAISE) come from keyword lists and the exchanges' announcement
-categories. The **move since the headline** compares the board price when Hyperdesk first saw a
+categories. The **move since the headline** compares the board price when Market-desk first saw a
 headline (only for headlines under 15 minutes old) with the current board price, which refreshes
 about every 30 s; it is not tick-accurate. Replace the source list with your own in
 `news_feeds.json` in the data folder. Check every source from your network with
@@ -155,7 +155,7 @@ about every 30 s; it is not tick-accurate. Replace the source list with your own
 | RSS bridges | any RSS/Atom URL per account (RSSHub, Nitter, rss.app…) | No token needed |
 
 A post becomes a call when it names a coin and a clear direction. The price at the call is the
-board price when Hyperdesk first sees the post, so calls made while Hyperdesk was closed start
+board price when Market-desk first sees the post, so calls made while Market-desk was closed start
 from the next price it sees. Calls are stored in `kol_calls.json`.
 
 ## Things to know

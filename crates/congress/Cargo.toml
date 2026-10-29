@@ -1,6 +1,6 @@
 [package]
 name = "hd-congress"
-description = "STOCK Act disclosure ingest (Senate eFD + House Clerk PTRs) for Hyperdesk"
+description = "STOCK Act disclosure ingest (Senate eFD + House Clerk PTRs) for Market-desk"
 version.workspace = true
 edition.workspace = true
 

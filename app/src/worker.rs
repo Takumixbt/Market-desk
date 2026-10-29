@@ -3,7 +3,7 @@
 //! never blocks.
 
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, mpsc};
 use std::time::Duration;
 
@@ -314,23 +314,52 @@ impl Shared {
 }
 
 pub fn data_dir() -> PathBuf {
+    let dir = default_data_dir();
+    migrate_legacy_data_dir(&dir);
+    dir
+}
+
+fn default_data_dir() -> PathBuf {
     if let Some(d) = std::env::var_os("HD_DATA_DIR") {
         return PathBuf::from(d);
     }
-    // Roaming app data on Windows (`%APPDATA%\Hyperdesk`), like other desktop apps.
+    // Roaming app data on Windows (`%APPDATA%\Market-desk`), like other desktop apps.
     if cfg!(windows)
         && let Some(appdata) = std::env::var_os("APPDATA")
     {
-        return PathBuf::from(appdata).join("Hyperdesk");
+        return PathBuf::from(appdata).join("Market-desk");
     }
     let home = crate::platform::home_dir().unwrap_or_else(|| PathBuf::from("."));
     if cfg!(target_os = "macos") {
-        home.join("Library/Application Support/Hyperdesk")
+        home.join("Library/Application Support/Market-desk")
     } else {
         std::env::var_os("XDG_DATA_HOME")
             .map(PathBuf::from)
             .unwrap_or_else(|| home.join(".local/share"))
-            .join("hyperdesk")
+            .join("market-desk")
+    }
+}
+
+/// Earlier builds shipped as "Hyperdesk". Move that folder over once, so saved layouts,
+/// themes, wallet labels and settings are not stranded under the old name.
+fn migrate_legacy_data_dir(dir: &Path) {
+    static ONCE: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+    ONCE.get_or_init(|| migrate_data_dir_once(dir));
+}
+
+fn migrate_data_dir_once(dir: &Path) {
+    if dir.exists() {
+        return;
+    }
+    let (Some(parent), Some(name)) = (dir.parent(), dir.file_name()) else { return };
+    for legacy in ["Hyperdesk", "hyperdesk"] {
+        if std::ffi::OsStr::new(legacy) == name {
+            continue;
+        }
+        let old = parent.join(legacy);
+        if old.is_dir() && std::fs::rename(&old, dir).is_ok() {
+            return;
+        }
     }
 }
 
@@ -899,6 +928,38 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn scratch(tag: &str) -> std::path::PathBuf {
+        let p = std::env::temp_dir().join(format!("market-desk-{}-{tag}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&p);
+        std::fs::create_dir_all(&p).unwrap();
+        p
+    }
+
+    #[test]
+    fn legacy_settings_folder_is_adopted() {
+        let root = scratch("adopt");
+        std::fs::create_dir_all(root.join("Hyperdesk")).unwrap();
+        std::fs::write(root.join("Hyperdesk").join("prefs.json"), "{}").unwrap();
+        let new = root.join("Market-desk");
+        migrate_data_dir_once(&new);
+        assert!(new.join("prefs.json").exists(), "settings moved to the new folder");
+        assert!(!root.join("Hyperdesk").exists(), "empty legacy folder left behind");
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn existing_folder_is_not_overwritten_by_legacy() {
+        let root = scratch("nooverwrite");
+        std::fs::create_dir_all(root.join("Hyperdesk")).unwrap();
+        std::fs::write(root.join("Hyperdesk").join("prefs.json"), "old").unwrap();
+        std::fs::create_dir_all(root.join("Market-desk")).unwrap();
+        std::fs::write(root.join("Market-desk").join("prefs.json"), "new").unwrap();
+        migrate_data_dir_once(&root.join("Market-desk"));
+        let kept = std::fs::read_to_string(root.join("Market-desk").join("prefs.json")).unwrap();
+        assert_eq!(kept, "new", "the live settings folder always wins");
+        let _ = std::fs::remove_dir_all(&root);
+    }
 
     #[test]
     fn compare_alignment_carries_last_close() {

@@ -1,6 +1,6 @@
 # Feature study: Velo, OpenMarket, Hyperdash, hl.eco and Gambit
 
-Hyperdesk's crypto features were planned from the **public descriptions** of these products
+Market-desk's crypto features were planned from the **public descriptions** of these products
 (product pages, documentation, release notes and third-party reviews, October 2026); none of
 their sites were reachable from the build environment, no captures were made, and nothing of
 theirs is copied. To deepen the study, see "Next steps" below.

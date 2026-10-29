@@ -227,14 +227,22 @@ pub(super) fn ago(ms: i64) -> String {
     }
 }
 
+/// The horizontal scale [`row`] uses for `widths` at the current pane width. Anything painted
+/// on top of a row (heat washes, sparklines, hit targets) must use the same value, or it drifts
+/// away from the cells as soon as the pane is narrower than the columns.
+pub(super) fn row_scale(ui: &Ui, widths: &[f32]) -> f32 {
+    let s = dp(1.0);
+    let total: f32 = widths.iter().map(|w| w * s).sum();
+    let avail = ui.available_width();
+    if total > avail && total > 0.0 { s * (avail / total).max(0.85) } else { s }
+}
+
 /// A painted table row: `cells` are `(text, colour, right-aligned)` at fixed widths. When the pane
 /// is narrower than the columns, they shrink a little, trailing columns that still do not fit are
 /// left out, and each cell clips its text instead of spilling into its neighbour.
 pub(super) fn row(ui: &mut Ui, widths: &[f32], cells: &[(String, Color32, bool)], header: bool) -> egui::Response {
-    let s = dp(1.0);
-    let total: f32 = widths.iter().map(|w| w * s).sum();
+    let s = row_scale(ui, widths);
     let avail = ui.available_width();
-    let s = if total > avail && total > 0.0 { s * (avail / total).max(0.85) } else { s };
     let h = dp(19.0);
     let (r, resp) = ui.allocate_exact_size(vec2(avail, h), if header { Sense::hover() } else { Sense::click() });
     let p = ui.painter_at(r);

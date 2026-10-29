@@ -193,7 +193,7 @@ pub struct CryptoProvider {
 impl CryptoProvider {
     pub fn new() -> Result<Self> {
         let client = reqwest::Client::builder()
-            .user_agent(concat!("hyperdesk/", env!("CARGO_PKG_VERSION")))
+            .user_agent(concat!("market-desk/", env!("CARGO_PKG_VERSION")))
             .timeout(Duration::from_secs(20))
             .build()?;
         Ok(Self { client })

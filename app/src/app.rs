@@ -1157,6 +1157,7 @@ impl TerminalApp {
                         Some(r) => {
                             self.status = format!("Alert added: {}", r.describe());
                             self.market.rules.push(r);
+                            self.save_rules();
                         }
                         None => self.status = format!("Could not read alert {rule:?}; try BTC > 70k or SOL CHG > 8%"),
                     }
@@ -1528,7 +1529,9 @@ impl TerminalApp {
                 }
             }
         }
-        if !self.cmd.is_empty() || !self.focused_is_chart() {
+        // The command line owns the keyboard even while empty: Backspace, Delete, Escape and
+        // the arrow keys belong to it, not to the chart behind it.
+        if !self.cmd.is_empty() || cmd_focused || !self.focused_is_chart() {
             return;
         }
         let pressed = |m: Modifiers, k: Key| ctx.input_mut(|i| i.consume_key(m, k));

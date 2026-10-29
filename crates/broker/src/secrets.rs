@@ -2,8 +2,8 @@
 //!
 //! The partner keys (`clientId`, `consumerKey`) and the per-user `userId`/`userSecret` are
 //! stored together as one small JSON document: in the macOS Keychain (generic password,
-//! service `hyperdesk`, account `snaptrade`), the Windows Credential Manager (generic
-//! credential `hyperdesk/snaptrade`), or elsewhere in an owner-only (0600) file in the
+//! service `market-desk`, account `snaptrade`), the Windows Credential Manager (generic
+//! credential `market-desk/snaptrade`), or elsewhere in an owner-only (0600) file in the
 //! app's data directory. `SNAPTRADE_*` environment variables override stored values
 //! field by field. Nothing is ever written inside the repository.
 
@@ -13,7 +13,10 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
-pub const KEYCHAIN_SERVICE: &str = "hyperdesk";
+pub const KEYCHAIN_SERVICE: &str = "market-desk";
+/// Service name used by earlier builds (shipped as "Hyperdesk"): read once, then copied
+/// forward to [`KEYCHAIN_SERVICE`].
+pub const LEGACY_KEYCHAIN_SERVICE: &str = "hyperdesk";
 pub const KEYCHAIN_ACCOUNT: &str = "snaptrade";
 
 /// Environment variables that override stored credentials.
@@ -142,7 +145,14 @@ impl SecretStore {
 
     pub fn load(&self) -> Result<Option<Credentials>> {
         let text = match &self.backend {
-            Backend::Keychain => keychain::get()?,
+            Backend::Keychain => match keychain::get()? {
+                Some(v) => Some(v),
+                // Read-through from the pre-rename service name, then copy forward so the
+                // next save lands under the current one.
+                None => keychain::get_service(LEGACY_KEYCHAIN_SERVICE)?.inspect(|v| {
+                    let _ = keychain::set(v);
+                }),
+            },
             Backend::File(p) => match std::fs::read_to_string(p) {
                 Ok(t) => Some(t),
                 Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
@@ -215,7 +225,11 @@ mod keychain {
     const NOT_FOUND: i32 = -25300;
 
     pub fn get() -> Result<Option<String>> {
-        match get_generic_password(KEYCHAIN_SERVICE, KEYCHAIN_ACCOUNT) {
+        get_service(KEYCHAIN_SERVICE)
+    }
+
+    pub fn get_service(service: &str) -> Result<Option<String>> {
+        match get_generic_password(service, KEYCHAIN_ACCOUNT) {
             Ok(bytes) => Ok(Some(String::from_utf8(bytes).context("Keychain item is not UTF-8")?)),
             Err(e) if e.code() == NOT_FOUND => Ok(None),
             Err(e) => Err(anyhow::anyhow!("reading the Keychain: {e}")),
@@ -235,7 +249,7 @@ mod keychain {
     }
 }
 
-/// The Windows Credential Manager, as a generic credential named `hyperdesk/snaptrade`
+/// The Windows Credential Manager, as a generic credential named `market-desk/snaptrade`
 /// (per user, persisted on this machine, not roamed).
 #[cfg(windows)]
 mod keychain {
@@ -254,12 +268,16 @@ mod keychain {
         s.encode_utf16().chain(std::iter::once(0)).collect()
     }
 
-    fn target() -> Vec<u16> {
-        wide(&format!("{KEYCHAIN_SERVICE}/{KEYCHAIN_ACCOUNT}"))
+    fn target(service: &str) -> Vec<u16> {
+        wide(&format!("{service}/{KEYCHAIN_ACCOUNT}"))
     }
 
     pub fn get() -> Result<Option<String>> {
-        let target = target();
+        get_service(KEYCHAIN_SERVICE)
+    }
+
+    pub fn get_service(service: &str) -> Result<Option<String>> {
+        let target = target(service);
         let mut cred: *mut CREDENTIALW = std::ptr::null_mut();
         // SAFETY: `target` is NUL-terminated and outlives the call; on success `cred` points to
         // a CREDENTIALW owned by the system until `CredFree`.
@@ -286,7 +304,7 @@ mod keychain {
         if value.len() > MAX_BLOB {
             bail!("credentials are too large for the Windows Credential Manager");
         }
-        let mut target = target();
+        let mut target = target(KEYCHAIN_SERVICE);
         let mut user = wide(KEYCHAIN_ACCOUNT);
         let mut blob = value.as_bytes().to_vec();
         // SAFETY: every pointer refers to a live, NUL-terminated (strings) or sized (blob)
@@ -307,7 +325,7 @@ mod keychain {
     }
 
     pub fn delete() -> Result<()> {
-        let target = target();
+        let target = target(KEYCHAIN_SERVICE);
         // SAFETY: `target` is NUL-terminated and outlives the call.
         unsafe {
             if CredDeleteW(target.as_ptr(), CRED_TYPE_GENERIC, 0) == 0 {
@@ -328,6 +346,9 @@ mod keychain {
     pub fn get() -> Result<Option<String>> {
         bail!("the Keychain is only available on macOS")
     }
+    pub fn get_service(_: &str) -> Result<Option<String>> {
+        bail!("the Keychain is only available on macOS")
+    }
     pub fn set(_: &str) -> Result<()> {
         bail!("the Keychain is only available on macOS")
     }
@@ -344,7 +365,7 @@ mod tests {
         Credentials {
             client_id: "PARTNER-ID".into(),
             consumer_key: "consumer-key-0123456789".into(),
-            user_id: "hyperdesk-1".into(),
+            user_id: "market-desk-1".into(),
             user_secret: "user-secret-abcdef".into(),
         }
     }

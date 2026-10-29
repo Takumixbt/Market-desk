@@ -165,7 +165,7 @@ pub fn open_external(target: &str) -> std::io::Result<()> {
 pub fn new_user_id() -> String {
     let nanos = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_nanos());
     let mix = nanos ^ (u128::from(std::process::id()) << 64);
-    format!("hyperdesk-{:016x}", (mix as u64) ^ ((mix >> 64) as u64))
+    format!("market-desk-{:016x}", (mix as u64) ^ ((mix >> 64) as u64))
 }
 
 impl TerminalApp {
@@ -777,7 +777,7 @@ mod tests {
         let a = new_user_id();
         std::thread::sleep(Duration::from_millis(1));
         let b = new_user_id();
-        assert!(a.starts_with("hyperdesk-") && a.len() == "hyperdesk-".len() + 16);
+        assert!(a.starts_with("market-desk-") && a.len() == "market-desk-".len() + 16);
         assert_ne!(a, b);
     }
 

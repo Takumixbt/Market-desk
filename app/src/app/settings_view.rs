@@ -466,17 +466,25 @@ impl TerminalApp {
             return;
         }
         let Some(i) = self.themes.iter().position(|t| t.name == old && !t.builtin) else { return };
-        let old_file = self.themes[i].source.take();
+        let old_file = self.themes[i].source.clone();
+        // Drop the old path so the save derives one from the new name.
+        self.themes[i].source = None;
         self.themes[i].name = new.to_string();
-        match self.theme_store.save(&self.themes[i]) {
-            Ok(path) => {
-                if let Some(f) = old_file.filter(|f| *f != path) {
-                    let _ = std::fs::remove_file(f);
-                }
-                self.themes[i].source = Some(path);
+        let path = match self.theme_store.save(&self.themes[i]) {
+            Ok(path) => path,
+            Err(e) => {
+                // Leave the theme exactly as it was: renaming it in memory while the old file
+                // is still on disk would point the selection at a theme that does not exist.
+                self.themes[i].name = old.to_string();
+                self.themes[i].source = old_file;
+                self.status = format!("Rename failed: {e:#}");
+                return;
             }
-            Err(e) => self.status = format!("Rename failed: {e:#}"),
+        };
+        if let Some(f) = old_file.filter(|f| !crate::layouts::same_file(f, &path)) {
+            let _ = std::fs::remove_file(f);
         }
+        self.themes[i].source = Some(path);
         let a = &mut self.prefs.appearance;
         for slot in [&mut a.theme, &mut a.dark_theme, &mut a.light_theme] {
             if slot == old {
@@ -484,8 +492,9 @@ impl TerminalApp {
             }
         }
         self.editing_theme = new.to_string();
-        self.save_prefs();
         self.status = format!("Renamed theme {old:?} to {new:?}");
+        // Only replaces the message above if the preferences could not be written.
+        self.save_prefs();
     }
 
     fn theme_op(&mut self, op: &str, idx: usize) {
@@ -537,7 +546,7 @@ impl TerminalApp {
                     a.theme = SYSTEM.into();
                 }
                 if a.dark_theme == name {
-                    a.dark_theme = "Hyperdesk".into();
+                    a.dark_theme = "Market-desk".into();
                 }
                 if a.light_theme == name {
                     a.light_theme = "Terminal Light".into();
@@ -574,7 +583,7 @@ impl TerminalApp {
 
     fn hotkeys_tab(&mut self, ui: &mut Ui, cmds: &mut Vec<SettingsCmd>) {
         section(ui, "Keyboard shortcuts");
-        if self.hotkey_table(ui) {
+        if self.hotkey_table(ui, "settings") {
             cmds.push(SettingsCmd::SavePrefs);
         }
     }

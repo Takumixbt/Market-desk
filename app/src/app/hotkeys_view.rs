@@ -77,7 +77,7 @@ fn command_table(ui: &mut Ui, id: &str, rows: &[(&[&str], &str)]) {
 impl TerminalApp {
     /// Grouped, searchable table of every action and its binding. Click a binding, then
     /// press the new keys (Esc cancels). Returns whether the keymap changed.
-    pub(super) fn hotkey_table(&mut self, ui: &mut Ui) -> bool {
+    pub(super) fn hotkey_table(&mut self, ui: &mut Ui, salt: &str) -> bool {
         let mut changed = false;
         ui.horizontal(|ui| {
             ui.add(
@@ -134,7 +134,7 @@ impl TerminalApp {
                     text(),
                 );
                 let resp = ui
-                    .interact(binding, Id::new(("hotkey", action)), Sense::click())
+                    .interact(binding, Id::new((salt, "hotkey", action)), Sense::click())
                     .on_hover_text("Click, then press the new shortcut (Esc cancels)");
                 let capturing = self.rebinding == Some(action);
                 if capturing {
@@ -180,8 +180,9 @@ impl TerminalApp {
                             vec2(g.size().x + 10.0, 20.0),
                         );
                         x = r.left() - 4.0;
-                        let resp =
-                            ui.interact(r, Id::new(("hotkey-op", action, label)), Sense::click()).on_hover_text(tip);
+                        let resp = ui
+                            .interact(r, Id::new((salt, "hotkey-op", action, label)), Sense::click())
+                            .on_hover_text(tip);
                         if resp.hovered() {
                             p.rect_filled(r, 5.0, theme::control());
                         }
@@ -425,7 +426,7 @@ impl TerminalApp {
             );
 
             section(ui, "Keyboard shortcuts");
-            changed = self.hotkey_table(ui);
+            changed = self.hotkey_table(ui, "help");
 
             section(ui, "Data");
             para(

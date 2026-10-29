@@ -18,11 +18,21 @@ pub fn segmented(
     height: f32,
 ) -> Option<usize> {
     let (font, pad) = segment_style(height);
-    let widths: Vec<f32> = labels
+    let mut widths: Vec<f32> = labels
         .iter()
         .map(|l| ui.painter().layout_no_wrap((*l).to_string(), font.clone(), Color32::WHITE).size().x + pad)
         .collect();
-    let total: f32 = widths.iter().sum::<f32>() + 4.0;
+    let mut total: f32 = widths.iter().sum::<f32>() + 4.0;
+    // A narrow pane must not push the trailing segments past the clip rect: they would be
+    // painted outside it and could never be clicked. Shrink every segment to fit instead.
+    let avail = ui.available_width();
+    if total > avail && avail > 8.0 {
+        let scale = ((avail - 4.0) / (total - 4.0)).clamp(0.0, 1.0);
+        for w in &mut widths {
+            *w = (*w * scale).max(1.0);
+        }
+        total = widths.iter().sum::<f32>() + 4.0;
+    }
     let (rect, _) = ui.allocate_exact_size(vec2(total, height), Sense::hover());
     let id = ui.id().with(id_salt);
     let p = ui.painter_at(rect.expand(1.0));
@@ -52,7 +62,7 @@ pub fn segmented(
         let resp = ui.interact(r, id.with(i), Sense::click());
         let active = selected == Some(i);
         let color = if active || resp.hovered() { theme::text() } else { theme::muted() };
-        p.text(r.center(), Align2::CENTER_CENTER, *label, font.clone(), color);
+        p.with_clip_rect(r.intersect(rect)).text(r.center(), Align2::CENTER_CENTER, *label, font.clone(), color);
         if resp.clicked() {
             clicked = Some(i);
         }

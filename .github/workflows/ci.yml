@@ -40,9 +40,9 @@ jobs:
           HD_PROVIDER: sample
           HD_CONGRESS_REFRESH_MIN: "0"
           HD_SMOKE_SECS: "8"
-          HD_DATA_DIR: ${{ runner.temp }}/hyperdesk
+          HD_DATA_DIR: ${{ runner.temp }}/market-desk
         run: |
-          ./target/release/hyperdesk > smoke.log 2>&1 &
+          ./target/release/market-desk > smoke.log 2>&1 &
           pid=$!
           sleep 6
           screencapture -x screenshot-${{ matrix.arch }}.png || true
@@ -56,9 +56,9 @@ jobs:
         env:
           HD_SMOKE_SECS: "12"
           HD_CONGRESS_REFRESH_MIN: "0"
-          HD_DATA_DIR: ${{ runner.temp }}/hyperdesk-live
+          HD_DATA_DIR: ${{ runner.temp }}/market-desk-live
         run: |
-          ./target/release/hyperdesk > live.log 2>&1 &
+          ./target/release/market-desk > live.log 2>&1 &
           pid=$!
           sleep 10
           screencapture -x screenshot-live-${{ matrix.arch }}.png || true
@@ -75,7 +75,7 @@ jobs:
             screenshot-*.png
             smoke.log
             live.log
-            target/release/Hyperdesk.app
+            target/release/Market-desk.app
 
   windows:
     name: Windows x64
@@ -102,9 +102,9 @@ jobs:
           HD_CONGRESS_REFRESH_MIN: "0"
           HD_SMOKE_SECS: "8"
           HD_LOG_FILE: ${{ runner.temp }}\smoke.log
-          HD_DATA_DIR: ${{ runner.temp }}\hyperdesk
+          HD_DATA_DIR: ${{ runner.temp }}\market-desk
         run: |
-          $p = Start-Process -FilePath .\target\release\hyperdesk.exe -PassThru
+          $p = Start-Process -FilePath .\target\release\market-desk.exe -PassThru
           $p | Wait-Process -Timeout 120
           Get-Content $env:HD_LOG_FILE
           if (-not (Select-String -Path $env:HD_LOG_FILE -Pattern "smoke:" -Quiet)) { exit 1 }
@@ -150,4 +150,4 @@ jobs:
           HD_PROVIDER: sample
           HD_CONGRESS_REFRESH_MIN: "0"
           HD_SMOKE_SECS: "6"
-        run: xvfb-run -a ./target/release/hyperdesk 2>&1 | tee smoke.log && grep -q "smoke:" smoke.log
+        run: xvfb-run -a ./target/release/market-desk 2>&1 | tee smoke.log && grep -q "smoke:" smoke.log

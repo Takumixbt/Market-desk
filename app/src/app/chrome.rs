@@ -308,7 +308,8 @@ impl TerminalApp {
             self.suggestion = self.suggestion.and_then(|i| i.checked_sub(1));
         }
         if complete {
-            let pick = &suggestions[self.suggestion.unwrap_or(0)];
+            // `suggestion` may predate a list that has since shrunk (typing narrows it).
+            let pick = &suggestions[self.suggestion.unwrap_or(0).min(suggestions.len() - 1)];
             self.cmd = format!("{} ", pick.key);
             self.suggestion = None;
             self.focus_cmd = true;
@@ -417,6 +418,7 @@ impl TerminalApp {
             }
         } else if had_focus && esc {
             self.cmd.clear();
+            self.suggestion = None;
             resp.surrender_focus();
         } else if focused && (up || down) && !self.cmd_history.is_empty() {
             let n = self.cmd_history.len();
@@ -432,6 +434,7 @@ impl TerminalApp {
             };
             self.cmd_hist_pos = Some(pos);
             self.cmd = self.cmd_history[pos].clone();
+            self.suggestion = None;
         }
         if focused && !self.cmd.is_empty() {
             self.dropdown(ui.ctx(), field, &suggestions);
@@ -541,7 +544,7 @@ impl TerminalApp {
         let head = Rect::from_min_size(rect.min, vec2(rect.width(), self.toolbar_h()));
         window_drag_region(ui, head, "sidebar");
         if !cfg!(target_os = "macos") {
-            p.text(head.left_center() + vec2(14.0, 0.0), Align2::LEFT_CENTER, "HYPERDESK", mono(12.5), amber());
+            p.text(head.left_center() + vec2(14.0, 0.0), Align2::LEFT_CENTER, "MARKET-DESK", mono(12.5), amber());
         }
 
         let body = Rect::from_min_max(pos2(rect.left(), head.bottom()), rect.max);
@@ -769,8 +772,13 @@ impl TerminalApp {
                 && old == name
             {
                 let r = ui.add(egui::TextEdit::singleline(buf).font(ui_font(12.5)).desired_width(f32::INFINITY));
-                r.request_focus();
-                if r.lost_focus() {
+                // Take focus once, when the editor appears. Requesting it every frame resets
+                // egui's focus history, so `lost_focus` (Enter, Esc, click-away) never fires.
+                let closed = r.lost_focus();
+                if !r.has_focus() && !closed {
+                    r.request_focus();
+                }
+                if closed {
                     let commit = !ui.input(|i| i.key_pressed(Key::Escape)) && !buf.trim().is_empty() && buf != old;
                     if commit {
                         out.push(SidebarCmd::Layout(LayoutOp::Rename(old.clone(), buf.trim().to_string())));

@@ -211,9 +211,9 @@ fn fonts(ui: UiFont, mono: MonoFont, scale: f32) -> ThemeFonts {
 }
 
 /// The signature look: gold tickers on near-black panels with a mint accent.
-pub fn hyperdesk() -> Theme {
+pub fn market_desk() -> Theme {
     Theme {
-        name: "Hyperdesk".into(),
+        name: "Market-desk".into(),
         dark: true,
         colors: ThemeColors {
             background: Hex::rgb(11, 15, 17),
@@ -572,7 +572,7 @@ fn monokai() -> Theme {
 /// The themes that ship with the app, in display order.
 pub fn builtins() -> Vec<Theme> {
     vec![
-        hyperdesk(),
+        market_desk(),
         terminal_dark(),
         terminal_light(),
         amber_terminal(),

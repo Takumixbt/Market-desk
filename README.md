@@ -77,10 +77,10 @@ Nothing below is required; every pane works without it.
 | **Stocks from Alpaca** | `APCA_API_KEY_ID` and `APCA_API_SECRET_KEY` (free tier). |
 | **Brokerage accounts** | **Settings › Brokerage**: SnapTrade client ID and consumer key, **Register User**, **Connect Brokerage…**. Secrets go to the Windows Credential Manager or macOS Keychain; the app stores them in the OS keychain. |
 
-**Where things live:** `%APPDATA%\Hyperdesk` on Windows, `~/Library/Application Support/Hyperdesk`
-on macOS, `$XDG_DATA_HOME/hyperdesk` on Linux (or `HD_DATA_DIR`). Layouts, themes, prefs, caches,
+**Where things live:** `%APPDATA%\Market-desk` on Windows, `~/Library/Application Support/Market-desk`
+on macOS, `$XDG_DATA_HOME/market-desk` on Linux (or `HD_DATA_DIR`). Layouts, themes, prefs, caches,
 labels, alerts and KOL calls are plain JSON/TOML/SQLite files there. Release builds on Windows
-log to `hyperdesk.log` in the same folder.
+log to `market-desk.log` in the same folder.
 
 ## Where the data comes from
 
@@ -93,7 +93,7 @@ by endpoint, with refresh rates and caveats (geo-blocks, rate limits, unofficial
 
 ## Themes
 
-Nine built in, led by the default **Hyperdesk** palette: Terminal Dark and Light,
+Nine built in, led by the default **Market-desk** palette: Terminal Dark and Light,
 Amber Terminal (amber monospace on black), High Contrast, Solarized Dark and Light,
 Nord and Monokai. **Settings › Themes** is a live editor; custom themes are TOML files you can
 share.

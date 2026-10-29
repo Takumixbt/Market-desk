@@ -1,6 +1,6 @@
 [package]
 name = "hd-core"
-description = "Core market types, timeframes, indicators and sample data for Hyperdesk"
+description = "Core market types, timeframes, indicators and sample data for Market-desk"
 version.workspace = true
 edition.workspace = true
 

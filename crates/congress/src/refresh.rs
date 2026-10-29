@@ -394,7 +394,7 @@ impl HttpSource {
     pub fn new() -> Result<Self> {
         let client = reqwest::Client::builder()
             .user_agent(concat!(
-                "hyperdesk/",
+                "market-desk/",
                 env!("CARGO_PKG_VERSION"),
                 " (STOCK Act disclosure reader; +https://github.com/)"
             ))

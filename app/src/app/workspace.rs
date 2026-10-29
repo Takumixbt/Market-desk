@@ -1238,8 +1238,12 @@ impl TerminalApp {
                 let mut child = ui.new_child(UiBuilder::new().max_rect(edit));
                 if let Some((_, buf)) = &mut self.renaming_tab {
                     let te = child.add(egui::TextEdit::singleline(buf).font(ui_font(12.0)).desired_width(edit.width()));
-                    te.request_focus();
-                    if te.lost_focus() {
+                    // See `chrome::sidebar_layouts`: focus once, or `lost_focus` cannot fire.
+                    let closed = te.lost_focus();
+                    if !te.has_focus() && !closed {
+                        te.request_focus();
+                    }
+                    if closed {
                         let commit = !child.input(|i| i.key_pressed(egui::Key::Escape));
                         cmds.push(GroupCmd::Rename(pid, if commit { buf.clone() } else { "\u{0}".into() }));
                     }
@@ -1540,7 +1544,7 @@ impl TerminalApp {
             let Some(geom) = self.panes[i].window else { continue };
             let title = self.panes[i].display_title();
             let builder = ViewportBuilder::default()
-                .with_title(format!("{title} — Hyperdesk"))
+                .with_title(format!("{title} — Market-desk"))
                 .with_inner_size([geom.w, geom.h])
                 .with_position([geom.x, geom.y])
                 .with_min_inner_size([320.0, 220.0]);

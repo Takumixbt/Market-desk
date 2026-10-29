@@ -157,7 +157,7 @@ impl Default for Appearance {
     fn default() -> Self {
         Self {
             theme: crate::themes::SYSTEM.into(),
-            dark_theme: "Hyperdesk".into(),
+            dark_theme: "Market-desk".into(),
             light_theme: "Terminal Light".into(),
             mode: ThemeMode::System,
             accent: None,
@@ -689,6 +689,7 @@ impl Prefs {
     pub fn load(path: &std::path::Path) -> Prefs {
         let mut p: Prefs = std::fs::read(path).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default();
         p.migrate();
+        p.rename_legacy_themes();
         p.hotkeys = p.hotkeys.with_defaults();
         p.appearance.font_scale = p.appearance.font_scale.clamp(0.7, 1.6);
         p
@@ -710,6 +711,19 @@ impl Prefs {
             self.migrated_theme = self.migrate_appearance();
         }
         self.version = PREFS_VERSION;
+    }
+
+    /// The signature theme was called "Hyperdesk" before the app was renamed. Point an
+    /// existing selection at the same theme so the UI does not fall back to theme 0.
+    fn rename_legacy_themes(&mut self) {
+        const LEGACY: &str = "Hyperdesk";
+        const CURRENT: &str = "Market-desk";
+        let a = &mut self.appearance;
+        for slot in [&mut a.theme, &mut a.dark_theme, &mut a.light_theme] {
+            if slot.eq_ignore_ascii_case(LEGACY) {
+                *slot = CURRENT.to_string();
+            }
+        }
     }
 
     /// v3 moved colours, fonts and density into themes. Plain light/dark choices map to
@@ -766,6 +780,18 @@ impl Prefs {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn legacy_theme_name_follows_the_rename() {
+        let mut p = Prefs::default();
+        p.appearance.theme = "Hyperdesk".into();
+        p.appearance.dark_theme = "Hyperdesk".into();
+        p.appearance.light_theme = "Terminal Light".into();
+        p.rename_legacy_themes();
+        assert_eq!(p.appearance.theme, "Market-desk");
+        assert_eq!(p.appearance.dark_theme, "Market-desk");
+        assert_eq!(p.appearance.light_theme, "Terminal Light", "unrelated themes untouched");
+    }
 
     #[test]
     fn chords_parse_and_round_trip() {
@@ -833,7 +859,7 @@ mod tests {
         // Older or hand-written files with only some fields still load.
         let partial: Prefs = serde_json::from_str(r#"{"appearance":{"theme":"Monokai"}}"#).unwrap();
         assert_eq!(partial.appearance.theme, "Monokai");
-        assert_eq!(partial.appearance.dark_theme, "Hyperdesk");
+        assert_eq!(partial.appearance.dark_theme, "Market-desk");
         assert_eq!(partial.panels, PanelDefaults::default());
         let dir = std::env::temp_dir().join(format!("tr-prefs-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();

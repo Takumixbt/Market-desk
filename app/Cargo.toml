@@ -1,9 +1,9 @@
 [package]
-name = "hyperdesk"
+name = "market-desk"
 description = "A crypto and markets terminal with GPU charts, derivatives, order flow and Hyperliquid intelligence"
 version.workspace = true
 edition.workspace = true
-default-run = "hyperdesk"
+default-run = "market-desk"
 
 [dependencies]
 hd-core.workspace = true

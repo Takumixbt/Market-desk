@@ -1,4 +1,4 @@
-//! GPU chart rendering for hyperdesk.
+//! GPU chart rendering for market-desk.
 //!
 //! - [`viewport`]: bar-index/price <-> pixel math, pan and zoom.
 //! - [`lod`]: level-of-detail pyramids that bound per-frame work to the plot width.

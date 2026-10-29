@@ -1,6 +1,6 @@
 //! Named, saved workspace layouts: the dock tree, each pane's kind and settings, link
 //! groups and popped-out windows. Stored one JSON file per layout in
-//! `<data dir>/layouts/` (`~/Library/Application Support/Hyperdesk/layouts` on macOS),
+//! `<data dir>/layouts/` (`~/Library/Application Support/Market-desk/layouts` on macOS),
 //! so they can be shared, hand-edited, imported and exported.
 
 use std::collections::HashSet;
@@ -439,6 +439,15 @@ pub fn write_atomic(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
     std::fs::rename(tmp, path)
 }
 
+/// Whether two paths are the same file. A case-only rename resolves to one file on
+/// case-insensitive file systems, so the old path must not be deleted after the write.
+pub fn same_file(a: &Path, b: &Path) -> bool {
+    match (std::fs::canonicalize(a), std::fs::canonicalize(b)) {
+        (Ok(x), Ok(y)) => x == y,
+        _ => a == b,
+    }
+}
+
 /// The layouts folder and its files.
 pub struct Store {
     pub dir: PathBuf,
@@ -536,10 +545,20 @@ impl Store {
         if !old.eq_ignore_ascii_case(new) && self.exists(new) {
             bail!("a layout named {new:?} already exists");
         }
+        let old_path = self.find_file(old).with_context(|| format!("no saved layout named {old:?}"))?;
         let mut doc = self.load(old)?;
-        self.delete(old)?;
         doc.name = new.trim().to_string();
+        // Write the new file before removing the old one: a failed write must never leave
+        // the user with neither copy.
         self.save(&doc)?;
+        let new_path = self.path(&doc.name);
+        if !same_file(&old_path, &new_path) {
+            // Best effort: the renamed copy is already on disk, so failing here must not
+            // report the rename itself as failed.
+            if let Err(e) = std::fs::remove_file(&old_path) {
+                tracing::warn!("removing renamed layout {}: {e}", old_path.display());
+            }
+        }
         Ok(doc)
     }
 
@@ -735,6 +754,18 @@ mod tests {
         store.delete("Trading").unwrap();
         assert!(store.load("Trading").is_err());
         assert!(store.delete("Trading").is_err());
+        std::fs::remove_dir_all(&store.dir).unwrap();
+    }
+
+    #[test]
+    fn case_only_rename_keeps_exactly_one_layout() {
+        let store = temp_store("case-rename");
+        store.save(&LayoutDoc::default_workspace("alpha", &PanelDefaults::default())).unwrap();
+        store.rename("alpha", "ALPHA").unwrap();
+        let names = store.list();
+        assert_eq!(names.len(), 1, "a case-only rename left two files: {names:?}");
+        assert_eq!(names[0], "ALPHA");
+        assert!(store.load("ALPHA").is_ok());
         std::fs::remove_dir_all(&store.dir).unwrap();
     }
 

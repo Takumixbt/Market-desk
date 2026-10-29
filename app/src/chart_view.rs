@@ -98,6 +98,9 @@ pub struct ChartState {
     loading: bool,
     paging: bool,
     exhausted: bool,
+    /// When to retry a page that failed for a transient reason (network, timeout). A failure
+    /// is not the same as reaching the start of history.
+    retry_paging_at: Option<std::time::Instant>,
     error: Option<String>,
     built: Vec<BuiltIndicator>,
     compare_line: Option<LineRef>,
@@ -149,6 +152,7 @@ impl ChartState {
             loading: false,
             paging: false,
             exhausted: false,
+            retry_paging_at: None,
             error: None,
             built: Vec::new(),
             compare_line: None,
@@ -176,6 +180,7 @@ impl ChartState {
         self.loading = true;
         self.paging = false;
         self.exhausted = false;
+        self.retry_paging_at = None;
         self.error = None;
         self.viewport = None;
         self.manual_scale = None;
@@ -423,6 +428,7 @@ impl ChartState {
         self.bars = bars;
         self.gpu = Some(gpu);
         self.paging = false;
+        self.retry_paging_at = None;
         self.exhausted = exhausted || self.exhausted && prepended == 0;
         if !from_cache {
             self.loading = false;
@@ -456,9 +462,14 @@ impl ChartState {
         if generation == self.generation {
             self.loading = false;
             self.paging = false;
-            self.exhausted = true;
             if self.bars.is_empty() {
+                self.exhausted = true;
                 self.error = Some(error);
+            } else {
+                // A page that failed is usually a transient network error, not the start of
+                // history. Latching `exhausted` here would stop the user scrolling back for
+                // the rest of the session, so back off and retry instead.
+                self.retry_paging_at = Some(std::time::Instant::now() + std::time::Duration::from_secs(15));
             }
         }
     }
@@ -741,7 +752,12 @@ impl ChartState {
         self.viewport = Some(v);
 
         // Page older history when the left edge approaches loaded data.
-        if !self.paging && !self.loading && !self.exhausted && v.left() < v.visible_bars() * 0.3 {
+        if !self.paging
+            && !self.loading
+            && !self.exhausted
+            && self.retry_paging_at.is_none_or(|t| std::time::Instant::now() >= t)
+            && v.left() < v.visible_bars() * 0.3
+        {
             self.paging = true;
             w.send(Request::MoreHistory {
                 pane: self.id,
@@ -1625,5 +1641,25 @@ mod tests {
         assert_eq!((g.from, g.to.right), (shown, shown.right - 40.0));
         c.reset_view();
         assert_eq!(c.glide.map(|g| g.to), Some(Viewport::fit_last(500, DEFAULT_VISIBLE, 800.0)));
+    }
+
+    #[test]
+    fn a_failed_page_does_not_end_history() {
+        let mut c = ChartState::new(1, "AAPL", Timeframe::D1);
+        c.bars = Arc::new(hd_core::sample::generate("AAPL", Timeframe::D1, 10, 1_790_000_000));
+        c.generation = 3;
+        c.paging = true;
+        c.on_history_error(3, "request timed out".into());
+        assert!(!c.exhausted, "a transient error must not latch the end of history");
+        assert!(!c.paging);
+        assert!(c.retry_paging_at.is_some());
+        assert!(c.error.is_none(), "no error banner over a chart that still has bars");
+
+        // A first load that fails is a real error, and there is nothing to scroll back to.
+        let mut d = ChartState::new(2, "AAPL", Timeframe::D1);
+        d.generation = 4;
+        d.on_history_error(4, "no data".into());
+        assert!(d.exhausted);
+        assert_eq!(d.error.as_deref(), Some("no data"));
     }
 }

@@ -100,7 +100,7 @@ pub struct MarketData {
     wire_requested: Option<Instant>,
     /// When the wire's first batch arrived; headlines seen after that are "live".
     wire_since: Option<Instant>,
-    /// Per headline link: when Hyperdesk first saw it and the coin prices at that moment.
+    /// Per headline link: when Market-desk first saw it and the coin prices at that moment.
     pub news_marks: HashMap<String, NewsMark>,
     pub eco: Option<Result<Arc<Eco>, String>>,
     eco_at: Option<Instant>,
@@ -114,7 +114,7 @@ pub struct MarketData {
     board_for_alerts: Option<Instant>,
 }
 
-/// What Hyperdesk knew when a headline first reached the wire.
+/// What Market-desk knew when a headline first reached the wire.
 pub struct NewsMark {
     pub seen: Instant,
     /// Arrived while the wire was open (not part of the opening batch).
@@ -248,7 +248,7 @@ impl TerminalApp {
         }
     }
 
-    fn save_rules(&self) {
+    pub(super) fn save_rules(&self) {
         if let Ok(json) = serde_json::to_vec_pretty(&self.market.rules)
             && let Err(e) = crate::layouts::write_atomic(&alerts_path(), &json)
         {
@@ -379,7 +379,7 @@ fn who(h: &Headline) -> String {
     }
 }
 
-/// Coin chip text and colour: the move since the headline when Hyperdesk saw it fresh,
+/// Coin chip text and colour: the move since the headline when Market-desk saw it fresh,
 /// otherwise just the coin.
 fn coin_move(
     coin: &str,
@@ -611,7 +611,7 @@ fn wire(
                     w.coin = Some(coin.clone());
                 }
                 cresp
-                    .on_hover_text("Click: filter the wire to this coin · right-click: open a chart. The % is the move since Hyperdesk saw the headline (prices refresh about every 30 s).")
+                    .on_hover_text("Click: filter the wire to this coin · right-click: open a chart. The % is the move since Market-desk saw the headline (prices refresh about every 30 s).")
                     .context_menu(|ui| {
                         for (label, cmd) in [
                             ("Derivatives", format!("DERIV {coin}")),
@@ -693,7 +693,7 @@ fn kol(ui: &mut Ui, k: &mut KolPane, board: Option<&hd_flow::perps::Board>, offl
     if !offline && !k.token && k.sources.iter().all(|s| s.rss.is_empty()) {
         ui.label(
             RichText::new(
-                "X has no free read API. Set X_BEARER_TOKEN (a paid X API tier) before starting Hyperdesk, \
+                "X has no free read API. Set X_BEARER_TOKEN (a paid X API tier) before starting Market-desk, \
                  or give each account an RSS bridge URL (RSSHub, Nitter, rss.app).",
             )
             .font(ui_font(11.5))
@@ -1040,9 +1040,9 @@ fn market(ui: &mut Ui, m: &mut MarketPane, data: Option<&Result<Arc<Dashboard>, 
                         r.funding_8h.map_or(muted(), signed),
                         true,
                     ));
+                    let s = row_scale(ui, &widths);
                     let resp = row(ui, &widths, &cells, false);
                     // Return cells get a heat wash; the blank column holds the CVD sparkline.
-                    let s = dp(1.0);
                     let x0 = resp.rect.left() + (widths[0] + widths[1]) * s;
                     for (k, x) in r.returns.iter().enumerate() {
                         if let Some(v) = x {
@@ -1075,18 +1075,20 @@ fn market(ui: &mut Ui, m: &mut MarketPane, data: Option<&Result<Arc<Dashboard>, 
 }
 
 fn sparkline(ui: &Ui, r: Rect, v: &[f64]) {
+    let v: Vec<f64> = v.iter().copied().filter(|x| x.is_finite()).collect();
     if v.len() < 2 {
         return;
     }
     let lo = v.iter().copied().fold(f64::INFINITY, f64::min);
-    let hi = v.iter().copied().fold(f64::NEG_INFINITY, f64::max).max(lo + 1e-9);
+    let hi = v.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+    let span = (hi - lo).max(hi.abs() * 1e-9).max(1e-12);
     let pts: Vec<egui::Pos2> = v
         .iter()
         .enumerate()
         .map(|(i, x)| {
             pos2(
                 r.left() + r.width() * i as f32 / (v.len() - 1) as f32,
-                r.bottom() - ((x - lo) / (hi - lo)) as f32 * r.height(),
+                r.bottom() - ((x - lo) / span) as f32 * r.height(),
             )
         })
         .collect();
@@ -1285,6 +1287,7 @@ fn alerts(
     for (i, r) in rules.iter().enumerate() {
         let now = board.and_then(|b| r.current(b));
         let state = if r.active { ("TRIGGERED", amber()) } else { ("armed", muted()) };
+        let s = row_scale(ui, &widths);
         let resp = row(
             ui,
             &widths,
@@ -1306,7 +1309,6 @@ fn alerts(
             ],
             false,
         );
-        let s = dp(1.0);
         let x = resp.rect.left() + widths[..3].iter().sum::<f32>() * s;
         let cell = Rect::from_min_size(pos2(x, resp.rect.top()), vec2(widths[3] * s, resp.rect.height()));
         if ui
